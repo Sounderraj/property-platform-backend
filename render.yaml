@@ -1,0 +1,47 @@
+# Render Blueprint — free subdomain + HTTPS
+# Deploy: Render Dashboard → New → Blueprint → connect this repo
+# Set DATABASE_URL (Neon) and REDIS_URL (Upstash) when prompted.
+
+services:
+  - type: web
+    name: property-platform-api
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm ci && npm run build && npx prisma migrate deploy
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CRM_WEBHOOK_SECRET
+        sync: false
+      - key: CACHE_INVALIDATION_SECRET
+        sync: false
+      - key: RATE_LIMIT_MAX
+        value: "60"
+      - key: RATE_LIMIT_ENQUIRY_MAX
+        value: "10"
+
+  - type: worker
+    name: property-platform-worker
+    runtime: node
+    plan: free
+    branch: main
+    buildCommand: npm ci && npm run build
+    startCommand: npm run worker:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: REDIS_URL
+        sync: false
+      - key: CRM_WEBHOOK_SECRET
+        sync: false

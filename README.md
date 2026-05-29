@@ -129,10 +129,17 @@ On `POST /api/enquiry`, three BullMQ jobs are queued:
 
 CRM webhooks are processed asynchronously with retry + dead-letter queue.
 
+## Deploy (simple — recommended for assessment)
+
+**Free subdomain + HTTPS in ~20 min:** [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md)
+
+Uses [Render](https://render.com) + [Neon](https://neon.tech) + [Upstash](https://upstash.com) — no VPS setup.
+
 ## Documentation
 
-- [docs/ORACLE_CLOUD_DEPLOYMENT.md](docs/ORACLE_CLOUD_DEPLOYMENT.md) — **Free deployment** on Oracle Cloud Always Free VPS
-- [DEPLOYMENT.md](DEPLOYMENT.md) — VPS, Docker, PM2, Nginx, HTTPS
+- [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md) — **Simple free deploy** (Render subdomain)
+- [docs/ORACLE_CLOUD_DEPLOYMENT.md](docs/ORACLE_CLOUD_DEPLOYMENT.md) — Oracle Cloud Always Free VPS
+- [DEPLOYMENT.md](DEPLOYMENT.md) — DigitalOcean / VPS, Docker, PM2, Nginx, HTTPS
 - [SECURITY_REPORT.md](SECURITY_REPORT.md) — vulnerabilities + threat scenarios
 - [docs/API.md](docs/API.md) — API reference
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — performance issues & fixes
@@ -143,12 +150,12 @@ Import `postman/Property-Platform-API.postman_collection.json`.
 
 ## Submission Checklist
 
-- [ ] Deploy to VPS with HTTPS (update live URL here)
-- [ ] Push to GitHub
+- [ ] Deploy live (see [SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md))
+- [x] Push to GitHub
 - [ ] Add screenshots to `screenshots/`
-- [ ] Fill live URL in README
+- [ ] Fill live URL below
 
-**Live URL:** `https://your-domain.com` (update after deployment)
+**Live URL:** `https://your-app.onrender.com` (update after deployment)
 
 **GitHub:** `https://github.com/Sounderraj/property-platform-backend`
 
