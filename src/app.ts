@@ -62,8 +62,12 @@ export async function buildApp() {
 export async function startServer() {
   const app = await buildApp();
 
-  await app.listen({ port: env.PORT, host: env.HOST });
-  logger.info({ port: env.PORT, env: env.NODE_ENV }, 'Server listening');
+  // Render injects PORT and requires binding to 0.0.0.0 (not 127.0.0.1)
+  const port = Number(process.env.PORT) || env.PORT;
+  const host = '0.0.0.0';
+
+  await app.listen({ port, host });
+  logger.info({ port, host, nodeEnv: env.NODE_ENV }, 'Server listening');
 
   return app;
 }

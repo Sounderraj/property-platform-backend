@@ -86,6 +86,12 @@ You need:
 
 6. Wait ~5–10 min for both services to deploy (API + Worker)
 
+> **Important:** You need **two** services on Render:
+> - **Web Service** → `property-platform-api` (opens HTTP port)
+> - **Background Worker** → `property-platform-worker` (no port — do NOT create as Web Service)
+>
+> If you see *"Port scan timeout"* on the worker, change its type to **Background Worker** in Render settings.
+
 ---
 
 ## Step 5 — Test live API

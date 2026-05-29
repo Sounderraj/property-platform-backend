@@ -8,14 +8,13 @@ services:
     runtime: node
     plan: free
     branch: main
+    nodeVersion: "20"
     buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy
     startCommand: npm start
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
-      - key: HOST
-        value: 0.0.0.0
       - key: DATABASE_URL
         sync: false
       - key: REDIS_URL
@@ -34,6 +33,7 @@ services:
     runtime: node
     plan: free
     branch: main
+    nodeVersion: "20"
     buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run worker:prod
     envVars:
