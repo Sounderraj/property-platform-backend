@@ -1,0 +1,103 @@
+{
+  "info": {
+    "name": "Property Platform API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "enquiryId", "value": "" },
+    { "key": "webhookSecret", "value": "change-me-to-a-long-random-secret-in-production" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/health"
+      }
+    },
+    {
+      "name": "Create Enquiry",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "if (pm.response.code === 201) {",
+              "  const json = pm.response.json();",
+              "  pm.collectionVariables.set('enquiryId', json.data.id);",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Idempotency-Key", "value": "{{$guid}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"John Smith\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+441234567890\",\n  \"message\": \"I would like to arrange a viewing for this property.\",\n  \"propertyRef\": \"PROP-001\",\n  \"source\": \"web\"\n}"
+        },
+        "url": "{{baseUrl}}/api/enquiry"
+      }
+    },
+    {
+      "name": "Get Enquiry",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/enquiry/{{enquiryId}}"
+      }
+    },
+    {
+      "name": "List Enquiries",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/enquiries?page=1&limit=20"
+      }
+    },
+    {
+      "name": "CRM Webhook",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "X-Webhook-Signature", "value": "{{webhookSignature}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"event\": \"enquiry.synced\",\n  \"enquiryId\": \"{{enquiryId}}\",\n  \"externalId\": \"CRM-12345\"\n}"
+        },
+        "url": "{{baseUrl}}/api/webhook/crm"
+      }
+    },
+    {
+      "name": "List Properties",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/properties"
+      }
+    },
+    {
+      "name": "Get Property by Slug",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/properties/luxury-apartment-london"
+      }
+    },
+    {
+      "name": "Invalidate Cache",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"secret\": \"change-me-cache-secret\"\n}"
+        },
+        "url": "{{baseUrl}}/api/admin/cache/invalidate"
+      }
+    }
+  ]
+}

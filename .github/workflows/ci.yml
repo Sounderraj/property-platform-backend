@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: property_user
+          POSTGRES_PASSWORD: property_pass
+          POSTGRES_DB: property_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U property_user -d property_db"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+        env:
+          DATABASE_URL: postgresql://property_user:property_pass@localhost:5432/property_db?schema=public
+          REDIS_URL: redis://localhost:6379
+          CRM_WEBHOOK_SECRET: ci-test-webhook-secret-min-32-chars
+
+      - run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://property_user:property_pass@localhost:5432/property_db?schema=public

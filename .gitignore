@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+logs/
+.DS_Store
+coverage/
+.idea/
+.vscode/
+screenshots/*.png
+screenshots/*.jpg
+!screenshots/.gitkeep
