@@ -1,4 +1,5 @@
-node_modules/
+Caddyfile
+!Caddyfile.example
 dist/
 .env
 .env.local

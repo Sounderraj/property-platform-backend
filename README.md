@@ -129,17 +129,24 @@ On `POST /api/enquiry`, three BullMQ jobs are queued:
 
 CRM webhooks are processed asynchronously with retry + dead-letter queue.
 
-## Deploy (simple — recommended for assessment)
+## Deploy (recommended — one host + Docker)
 
-**Free subdomain + HTTPS in ~20 min:** [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md)
+**Free server + free subdomain + HTTPS:**
 
-Uses [Render](https://render.com) + [Neon](https://neon.tech) + [Upstash](https://upstash.com) — no VPS setup.
+[docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
+
+```bash
+docker compose -f docker-compose.deploy.yml up -d --build
+```
+
+Runs Postgres, Redis, API, Worker, and HTTPS (Caddy) on one Oracle Cloud free VM.
 
 ## Documentation
 
-- [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md) — **Simple free deploy** (Render subdomain)
-- [docs/ORACLE_CLOUD_DEPLOYMENT.md](docs/ORACLE_CLOUD_DEPLOYMENT.md) — Oracle Cloud Always Free VPS
-- [DEPLOYMENT.md](DEPLOYMENT.md) — DigitalOcean / VPS, Docker, PM2, Nginx, HTTPS
+- [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) — **One-host Docker deploy** (recommended)
+- [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md) — Render + Neon + Upstash (PaaS alternative)
+- [docs/ORACLE_CLOUD_DEPLOYMENT.md](docs/ORACLE_CLOUD_DEPLOYMENT.md) — Oracle VPS with PM2 + Nginx
+- [DEPLOYMENT.md](DEPLOYMENT.md) — DigitalOcean / VPS, PM2, Nginx
 - [SECURITY_REPORT.md](SECURITY_REPORT.md) — vulnerabilities + threat scenarios
 - [docs/API.md](docs/API.md) — API reference
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — performance issues & fixes
@@ -150,12 +157,12 @@ Import `postman/Property-Platform-API.postman_collection.json`.
 
 ## Submission Checklist
 
-- [ ] Deploy live (see [SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md))
+- [ ] Deploy live (see [DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md))
 - [x] Push to GitHub
 - [ ] Add screenshots to `screenshots/`
 - [ ] Fill live URL below
 
-**Live URL:** `https://your-app.onrender.com` (update after deployment)
+**Live URL:** `https://your-app.duckdns.org` (update after deployment)
 
 **GitHub:** `https://github.com/Sounderraj/property-platform-backend`
 

@@ -1,0 +1,8 @@
+# Copy to Caddyfile and replace with your DuckDNS domain:
+#   cp Caddyfile.example Caddyfile
+#
+# Example: sounderrajan-property.duckdns.org
+
+your-app.duckdns.org {
+    reverse_proxy api:3000
+}
