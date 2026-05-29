@@ -1,68 +1,105 @@
-# Docker Deployment (one host, one command)
+# Docker Deployment — DigitalOcean Ubuntu VPS
 
-Deploy the **full stack** on a single free server with Docker:
+Deploy the **full stack** on one Ubuntu server with Docker (assessment-preferred setup):
 
 ```
 Postgres + Redis + API + Worker + HTTPS (Caddy)
 ```
 
-**Cost:** $0 on [Oracle Cloud Always Free](https://www.oracle.com/cloud/free/)  
-**Live URL:** `https://your-app.duckdns.org`
+| | |
+|--|--|
+| **Provider** | [DigitalOcean](https://www.digitalocean.com/) (Ubuntu VPS) |
+| **Cost** | ~$4–6/month (Basic Droplet) |
+| **Live URL** | `https://your-domain.com` or `https://your-app.duckdns.org` |
 
 ---
 
-## Step 1 — Create free Oracle Cloud VM
+## Step 1 — Create DigitalOcean account
 
-1. Sign up at [oracle.com/cloud/free](https://www.oracle.com/cloud/free/)
-2. **Compute → Instances → Create**
-3. **Image:** Ubuntu 22.04
-4. **Shape:** `VM.Standard.A1.Flex` (Always Free ARM)
-5. **Public IP:** enable
-6. Add your **SSH public key**
-7. Create instance → copy **Public IP**
+1. Sign up at [digitalocean.com](https://www.digitalocean.com/)
+2. Add a payment method
+3. (Optional) New accounts often get **$200 credit for 60 days**
 
 ---
 
-## Step 2 — Open firewall ports
+## Step 2 — Create a Droplet (Ubuntu VPS)
 
-In Oracle Console → **Networking → VCN → Security List → Ingress Rules**, add:
+1. **Create → Droplets**
+2. **Region:** closest to you (e.g. Bangalore `BLR1`)
+3. **Image:** Ubuntu 22.04 LTS
+4. **Size:** Basic → **Regular** → **$4/mo** (1 GB RAM) or **$6/mo** (1 GB, better for Docker build)
+5. **Authentication:** SSH key (recommended)
 
-| Port | Purpose |
-|------|---------|
-| 22 | SSH |
-| 80 | HTTP (SSL certificate) |
-| 443 | HTTPS |
+   Generate on Windows (PowerShell) if needed:
+
+   ```powershell
+   ssh-keygen -t ed25519 -C "digitalocean" -f "$env:USERPROFILE\.ssh\digitalocean_deploy"
+   ```
+
+   Copy public key and paste in DigitalOcean:
+
+   ```powershell
+   Get-Content $env:USERPROFILE\.ssh\digitalocean_deploy.pub
+   ```
+
+6. **Hostname:** `property-backend`
+7. Click **Create Droplet**
+8. Copy the **Public IP** (e.g. `164.92.xxx.xxx`)
 
 ---
 
-## Step 3 — Free subdomain (DuckDNS)
+## Step 3 — Point a domain to the Droplet
 
-1. Sign up at [duckdns.org](https://www.duckdns.org/)
-2. Create subdomain e.g. `sounderrajan-property`
-3. Point it to your VM **Public IP**
-4. Your domain: `sounderrajan-property.duckdns.org`
+Pick **one**:
+
+### Option A — Your own domain
+In your domain DNS (DigitalOcean, Cloudflare, etc.):
+
+| Type | Name | Value |
+|------|------|-------|
+| A | `@` | Droplet IP |
+| A | `api` | Droplet IP |
+
+Use e.g. `api.yourdomain.com` in the Caddyfile below.
+
+### Option B — Free subdomain (DuckDNS)
+1. [duckdns.org](https://www.duckdns.org/) → create subdomain
+2. Point it to your Droplet IP
+3. Use e.g. `sounderrajan-property.duckdns.org`
 
 ---
 
-## Step 4 — SSH into the server
-
-From your PC (PowerShell):
+## Step 4 — SSH into the Droplet
 
 ```powershell
-ssh ubuntu@YOUR_PUBLIC_IP
+ssh -i $env:USERPROFILE\.ssh\digitalocean_deploy root@YOUR_DROPLET_IP
+```
+
+(DigitalOcean default user is `root` unless you chose another.)
+
+Enable firewall:
+
+```bash
+ufw allow OpenSSH
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
 ```
 
 ---
 
 ## Step 5 — Install Docker
 
-On the VM:
+```bash
+apt update && apt upgrade -y
+apt install -y docker.io docker-compose-plugin git
+```
+
+Verify:
 
 ```bash
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y docker.io docker-compose-plugin git
-sudo usermod -aG docker $USER
-newgrp docker
+docker --version
+docker compose version
 ```
 
 ---
@@ -70,6 +107,7 @@ newgrp docker
 ## Step 6 — Clone your repo
 
 ```bash
+cd /root
 git clone https://github.com/Sounderraj/property-platform-backend.git
 cd property-platform-backend
 ```
@@ -101,22 +139,29 @@ openssl rand -hex 16
 Optional — stronger DB password:
 
 ```bash
-export POSTGRES_PASSWORD=$(openssl rand -hex 16)
-echo "POSTGRES_PASSWORD=$POSTGRES_PASSWORD" >> .env
+echo "POSTGRES_PASSWORD=$(openssl rand -hex 16)" >> .env
 ```
 
-(`DATABASE_URL` / `REDIS_URL` are set automatically by `docker-compose.deploy.yml`.)
+(`DATABASE_URL` and `REDIS_URL` are set automatically by `docker-compose.deploy.yml`.)
 
 ---
 
-## Step 8 — Configure HTTPS domain
+## Step 8 — Configure HTTPS (Caddy)
 
 ```bash
 cp Caddyfile.example Caddyfile
 nano Caddyfile
 ```
 
-Replace `your-app.duckdns.org` with your real DuckDNS domain:
+Replace with your domain:
+
+```
+api.yourdomain.com {
+    reverse_proxy api:3000
+}
+```
+
+Or DuckDNS:
 
 ```
 sounderrajan-property.duckdns.org {
@@ -132,23 +177,23 @@ sounderrajan-property.duckdns.org {
 docker compose -f docker-compose.deploy.yml up -d --build
 ```
 
-Wait 2–5 minutes for the first build.
+First build takes 3–5 minutes.
 
-Check status:
+Check:
 
 ```bash
 docker ps
 docker compose -f docker-compose.deploy.yml logs -f api
 ```
 
-You should see 5 containers: `postgres`, `redis`, `api`, `worker`, `caddy`.
+Expected: **5 containers** — `postgres`, `redis`, `api`, `worker`, `caddy`.
 
 ---
 
 ## Step 10 — Test & submit
 
 ```bash
-curl https://sounderrajan-property.duckdns.org/health
+curl https://api.yourdomain.com/health
 ```
 
 Expected:
@@ -160,16 +205,17 @@ Expected:
 Update `README.md`:
 
 ```markdown
-**Live URL:** https://sounderrajan-property.duckdns.org
+**Live URL:** https://api.yourdomain.com
 ```
 
 ### Screenshots for submission
 
 Save to `screenshots/`:
 
-1. `curl` or browser showing `/health` over HTTPS
-2. `docker ps` (all 5 containers running)
-3. Browser padlock on your DuckDNS URL
+1. `/health` response over HTTPS
+2. `docker ps` — all 5 containers running
+3. DigitalOcean Droplet dashboard
+4. Browser HTTPS padlock
 
 ---
 
@@ -188,10 +234,10 @@ Save to `screenshots/`:
 
 | Problem | Fix |
 |---------|-----|
-| Site not loading | DuckDNS IP must match VM public IP; ports 80/443 open in Oracle |
-| SSL certificate error | Wait 1–2 min after first start; ensure port 80 is reachable |
+| Site not loading | DNS A record must point to Droplet IP; wait 5–15 min for DNS |
+| SSL error | Port 80 must be open (Caddy needs it for certificate) |
 | API container exits | `docker logs property-api` — check `.env` secrets |
-| Build fails on ARM | Normal on Oracle ARM — first build may take 5+ minutes |
+| Out of memory on build | Upgrade to $6/mo Droplet or add 1 GB swap |
 
 ---
 
@@ -199,17 +245,25 @@ Save to `screenshots/`:
 
 | Container | Role |
 |-----------|------|
-| `property-postgres` | PostgreSQL database |
+| `property-postgres` | PostgreSQL |
 | `property-redis` | Redis (queues + rate limit) |
 | `property-api` | REST API |
 | `property-worker` | BullMQ background jobs |
-| `property-caddy` | HTTPS reverse proxy (free SSL) |
+| `property-caddy` | HTTPS reverse proxy (Let's Encrypt) |
 
-**One signup. One server. One command.**
+**One Droplet. One command. Matches assessment requirements.**
+
+---
+
+## After assessment
+
+Delete the Droplet in DigitalOcean dashboard to stop billing:
+
+**Droplets → property-backend → Destroy**
 
 ---
 
 ## Related
 
-- [DEPLOYMENT.md](../DEPLOYMENT.md) — PM2 + Nginx alternative (assessment-style VPS)
+- [DEPLOYMENT.md](../DEPLOYMENT.md) — PM2 + Nginx alternative
 - [API.md](./API.md) — API reference

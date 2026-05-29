@@ -129,9 +129,9 @@ On `POST /api/enquiry`, three BullMQ jobs are queued:
 
 CRM webhooks are processed asynchronously with retry + dead-letter queue.
 
-## Deploy (recommended — one host + Docker)
+## Deploy (recommended — DigitalOcean + Docker)
 
-**Free server + free subdomain + HTTPS:**
+**Ubuntu VPS (assessment-preferred) + one Docker command:**
 
 [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
 
@@ -139,14 +139,13 @@ CRM webhooks are processed asynchronously with retry + dead-letter queue.
 docker compose -f docker-compose.deploy.yml up -d --build
 ```
 
-Runs Postgres, Redis, API, Worker, and HTTPS (Caddy) on one Oracle Cloud free VM.
+Runs Postgres, Redis, API, Worker, and HTTPS on one DigitalOcean Droplet (~$4–6/month).
 
 ## Documentation
 
-- [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) — **One-host Docker deploy** (recommended)
-- [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md) — Render + Neon + Upstash (PaaS alternative)
-- [docs/ORACLE_CLOUD_DEPLOYMENT.md](docs/ORACLE_CLOUD_DEPLOYMENT.md) — Oracle VPS with PM2 + Nginx
-- [DEPLOYMENT.md](DEPLOYMENT.md) — DigitalOcean / VPS, PM2, Nginx
+- [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) — **DigitalOcean + Docker** (recommended)
+- [DEPLOYMENT.md](DEPLOYMENT.md) — PM2 + Nginx alternative
+- [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md) — Render PaaS alternative
 - [SECURITY_REPORT.md](SECURITY_REPORT.md) — vulnerabilities + threat scenarios
 - [docs/API.md](docs/API.md) — API reference
 - [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — performance issues & fixes
@@ -162,7 +161,7 @@ Import `postman/Property-Platform-API.postman_collection.json`.
 - [ ] Add screenshots to `screenshots/`
 - [ ] Fill live URL below
 
-**Live URL:** `https://your-app.duckdns.org` (update after deployment)
+**Live URL:** `https://your-domain.com` (update after deployment)
 
 **GitHub:** `https://github.com/Sounderraj/property-platform-backend`
 
