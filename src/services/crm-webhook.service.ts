@@ -12,12 +12,14 @@ export class CrmWebhookService {
       throw new UnauthorizedError('Missing webhook signature');
     }
 
+    const normalizedSig = signature.trim().replace(/^sha256=/i, '').toLowerCase();
+
     const expected = createHmac('sha256', env.CRM_WEBHOOK_SECRET)
       .update(rawBody)
       .digest('hex');
 
-    const sigBuffer = Buffer.from(signature);
-    const expectedBuffer = Buffer.from(expected);
+    const sigBuffer = Buffer.from(normalizedSig, 'utf8');
+    const expectedBuffer = Buffer.from(expected, 'utf8');
 
     if (
       sigBuffer.length !== expectedBuffer.length ||

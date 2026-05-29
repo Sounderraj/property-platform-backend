@@ -118,6 +118,12 @@ All successful responses include `"success": true` unless noted.
 
 **Events:** `enquiry.created`, `enquiry.updated`, `enquiry.synced`
 
+**Troubleshooting `Invalid webhook signature`:**
+1. The signing secret must be the **exact** `CRM_WEBHOOK_SECRET` from Render (not necessarily your local `.env`).
+2. Sign the **exact bytes** sent as the request body (Postman collection does this automatically).
+3. Run **Create Enquiry** first so `enquiryId` is set before **CRM Webhook**.
+4. Generate a signature manually: `node scripts/generate-webhook-signature.js '{"event":"enquiry.synced","enquiryId":"..."}'`
+
 **Response 202:**
 ```json
 {

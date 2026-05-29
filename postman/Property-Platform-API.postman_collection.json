@@ -1,12 +1,14 @@
 {
   "info": {
     "name": "Property Platform API",
+    "description": "Import this collection, then set **webhookSecret** (Collection → Variables) to the exact **CRM_WEBHOOK_SECRET** from Render Dashboard → property-platform-api → Environment. It must match character-for-character — not your local .env unless you set Render to the same value.\n\nOrder: 1) Create Enquiry  2) CRM Webhook (signature is auto-generated).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    { "key": "baseUrl", "value": "http://localhost:3000" },
+    { "key": "baseUrl", "value": "https://property-platform-api.onrender.com" },
     { "key": "enquiryId", "value": "" },
-    { "key": "webhookSecret", "value": "change-me-to-a-long-random-secret-in-production" }
+    { "key": "webhookSecret", "value": "PASTE_YOUR_RENDER_CRM_WEBHOOK_SECRET_HERE" },
+    { "key": "webhookSignature", "value": "" }
   ],
   "item": [
     {
@@ -60,15 +62,35 @@
     },
     {
       "name": "CRM Webhook",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const secret = (pm.collectionVariables.get('webhookSecret') || '').trim();",
+              "const body = pm.variables.replaceIn(pm.request.body.raw);",
+              "if (!secret || secret.includes('PASTE_YOUR')) {",
+              "  throw new Error('Set webhookSecret to your Render CRM_WEBHOOK_SECRET');",
+              "}",
+              "if (!body || body.includes('{{')) {",
+              "  throw new Error('Run Create Enquiry first so enquiryId is set');",
+              "}",
+              "const signature = CryptoJS.HmacSHA256(body, secret).toString(CryptoJS.enc.Hex);",
+              "pm.request.headers.upsert({ key: 'X-Webhook-Signature', value: signature });",
+              "console.log('Body signed:', body);",
+              "console.log('X-Webhook-Signature:', signature);"
+            ]
+          }
+        }
+      ],
       "request": {
         "method": "POST",
         "header": [
-          { "key": "Content-Type", "value": "application/json" },
-          { "key": "X-Webhook-Signature", "value": "{{webhookSignature}}" }
+          { "key": "Content-Type", "value": "application/json" }
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"event\": \"enquiry.synced\",\n  \"enquiryId\": \"{{enquiryId}}\",\n  \"externalId\": \"CRM-12345\"\n}"
+          "raw": "{\"event\":\"enquiry.synced\",\"enquiryId\":\"{{enquiryId}}\",\"externalId\":\"CRM-12345\"}"
         },
         "url": "{{baseUrl}}/api/webhook/crm"
       }
