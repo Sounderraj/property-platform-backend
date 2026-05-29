@@ -10,9 +10,10 @@ https://property-platform-api.onrender.com
 
 | Service | Role | Cost |
 |---------|------|------|
-| [Render](https://render.com) | API + Worker + HTTPS subdomain | Free |
+| [Render](https://render.com) | API + HTTPS subdomain | Free |
 | [Neon](https://neon.tech) | PostgreSQL database | Free |
-| [Upstash](https://upstash.com) | Redis (queues + rate limit) | Free |
+
+> **No Redis / Upstash needed** — set `USE_REDIS=false` (default in `render.yaml`). Jobs run inline; cache uses memory.
 
 ---
 
@@ -25,34 +26,7 @@ https://property-platform-api.onrender.com
 
 ---
 
-## Step 2 — Upstash (Redis)
-
-1. Sign up at [upstash.com](https://upstash.com)
-2. **Create database** → type: **Regional**, name: `property-redis`
-3. On the database page, find **Redis URL** (tab: **Details** or **Connect**)
-4. Copy **only** the URL — it looks like:
-
-```
-rediss://default:YOUR_PASSWORD@your-name-12345.upstash.io:6379
-```
-
-**Do NOT copy** the `redis-cli` command. Wrong example (will crash):
-
-```
-redis-cli --tls -u redis://default:...@....upstash.io:6379   ❌
-```
-
-**Correct** — paste only this into Render `REDIS_URL`:
-
-```
-rediss://default:YOUR_PASSWORD@your-name-12345.upstash.io:6379   ✅
-```
-
-> Use `rediss://` (with double **s**) — Upstash requires TLS.
-
----
-
-## Step 3 — Generate secrets
+## Step 2 — Generate secrets
 
 On your PC (PowerShell):
 
@@ -69,7 +43,7 @@ You need:
 
 ---
 
-## Step 4 — Deploy on Render
+## Step 3 — Deploy on Render
 
 1. Sign up at [render.com](https://render.com) (use **GitHub** login)
 2. **New +** → **Blueprint**
@@ -80,17 +54,12 @@ You need:
 | Variable | Value |
 |----------|-------|
 | `DATABASE_URL` | Neon connection string from Step 1 |
-| `REDIS_URL` | Upstash URL from Step 2 |
 | `CRM_WEBHOOK_SECRET` | Your random secret |
 | `CACHE_INVALIDATION_SECRET` | Your random secret |
 
-6. Wait ~5–10 min for both services to deploy (API + Worker)
+6. Wait ~5–10 min for deploy (API only — no worker service needed)
 
-> **Important:** You need **two** services on Render:
-> - **Web Service** → `property-platform-api` (opens HTTP port)
-> - **Background Worker** → `property-platform-worker` (no port — do NOT create as Web Service)
->
-> If you see *"Port scan timeout"* on the worker, change its type to **Background Worker** in Render settings.
+> `USE_REDIS=false` is set automatically. Delete any old **Worker** service on Render if you created one before.
 
 ---
 

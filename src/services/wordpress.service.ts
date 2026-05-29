@@ -1,6 +1,6 @@
-import { redis } from '../config/redis';
 import { env } from '../config/env';
 import { logger } from '../config/logger';
+import { cacheDel, cacheDelPropertyKeys, cacheGet, cacheSetex } from '../utils/cache';
 
 const PROPERTIES_CACHE_KEY = 'wp:properties:list';
 const PROPERTY_CACHE_PREFIX = 'wp:property:';
@@ -89,7 +89,6 @@ export class WordPressService {
     };
   }
 
-  /** Mock fallback when WordPress is unavailable (local dev / assessment demo) */
   private mockProperties(): PropertySummary[] {
     return [
       {
@@ -115,7 +114,7 @@ export class WordPressService {
 
   async listProperties(first = 20, bypassCache = false): Promise<PropertySummary[]> {
     if (!bypassCache) {
-      const cached = await redis.get(PROPERTIES_CACHE_KEY);
+      const cached = await cacheGet(PROPERTIES_CACHE_KEY);
       if (cached) return JSON.parse(cached) as PropertySummary[];
     }
 
@@ -127,7 +126,7 @@ export class WordPressService {
       const properties = (data.properties?.nodes ?? []).map((n) => this.mapNode(n));
 
       if (properties.length > 0) {
-        await redis.setex(
+        await cacheSetex(
           PROPERTIES_CACHE_KEY,
           env.WORDPRESS_CACHE_TTL_SECONDS,
           JSON.stringify(properties)
@@ -138,11 +137,7 @@ export class WordPressService {
     } catch (err) {
       logger.warn({ err }, 'WordPress unavailable, using mock properties');
       const mock = this.mockProperties();
-      await redis.setex(
-        PROPERTIES_CACHE_KEY,
-        60,
-        JSON.stringify(mock)
-      );
+      await cacheSetex(PROPERTIES_CACHE_KEY, 60, JSON.stringify(mock));
       return mock;
     }
   }
@@ -151,7 +146,7 @@ export class WordPressService {
     const cacheKey = `${PROPERTY_CACHE_PREFIX}${slug}`;
 
     if (!bypassCache) {
-      const cached = await redis.get(cacheKey);
+      const cached = await cacheGet(cacheKey);
       if (cached) return JSON.parse(cached) as PropertySummary;
     }
 
@@ -163,25 +158,24 @@ export class WordPressService {
       if (!data.property) return null;
 
       const property = this.mapNode(data.property);
-      await redis.setex(cacheKey, env.WORDPRESS_CACHE_TTL_SECONDS, JSON.stringify(property));
+      await cacheSetex(cacheKey, env.WORDPRESS_CACHE_TTL_SECONDS, JSON.stringify(property));
       return property;
     } catch (err) {
       logger.warn({ err, slug }, 'WordPress property fetch failed');
       const mock = this.mockProperties().find((p) => p.slug === slug);
       if (mock) {
-        await redis.setex(cacheKey, 60, JSON.stringify(mock));
+        await cacheSetex(cacheKey, 60, JSON.stringify(mock));
       }
       return mock ?? null;
     }
   }
 
   async invalidateCache(slug?: string): Promise<void> {
-    await redis.del(PROPERTIES_CACHE_KEY);
+    await cacheDel(PROPERTIES_CACHE_KEY);
     if (slug) {
-      await redis.del(`${PROPERTY_CACHE_PREFIX}${slug}`);
+      await cacheDel(`${PROPERTY_CACHE_PREFIX}${slug}`);
     } else {
-      const keys = await redis.keys(`${PROPERTY_CACHE_PREFIX}*`);
-      if (keys.length) await redis.del(...keys);
+      await cacheDelPropertyKeys(PROPERTY_CACHE_PREFIX);
     }
   }
 }

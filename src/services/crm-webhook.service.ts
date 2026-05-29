@@ -4,7 +4,7 @@ import { env } from '../config/env';
 import { CrmWebhookInput } from '../schemas/enquiry.schema';
 import { hashPayload } from '../utils/fingerprint';
 import { ConflictError, UnauthorizedError } from '../utils/errors';
-import { crmWebhookQueue } from '../queues';
+import { dispatchCrmWebhookJob } from './job-dispatcher.service';
 
 export class CrmWebhookService {
   verifySignature(rawBody: string, signature: string | undefined): void {
@@ -43,19 +43,11 @@ export class CrmWebhookService {
       throw new ConflictError('Duplicate webhook payload already processed');
     }
 
-    const job = await crmWebhookQueue.add(
-      'process',
-      { payload, payloadHash },
-      {
-        jobId: `webhook-${payloadHash}`,
-        attempts: 5,
-        backoff: { type: 'exponential', delay: 2000 },
-      }
-    );
+    const jobId = await dispatchCrmWebhookJob({ payload, payloadHash });
 
     return {
       accepted: true,
-      jobId: job.id,
+      jobId,
       payloadHash,
     };
   }

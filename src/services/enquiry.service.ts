@@ -4,7 +4,7 @@ import { CreateEnquiryInput } from '../schemas/enquiry.schema';
 import { buildEnquiryFingerprint } from '../utils/fingerprint';
 import { sanitizeOptional, sanitizeText } from '../utils/sanitize';
 import { ConflictError, NotFoundError } from '../utils/errors';
-import { crmSyncQueue, emailQueue, pushNotificationQueue } from '../queues';
+import { dispatchEnquiryJobs } from './job-dispatcher.service';
 
 const DUPLICATE_WINDOW_MS = 5 * 60 * 1000;
 
@@ -72,15 +72,11 @@ export class EnquiryService {
       },
     });
 
-    await Promise.all([
-      crmSyncQueue.add('sync', { enquiryId: enquiry.id }, { jobId: `crm-${enquiry.id}` }),
-      emailQueue.add('send', { enquiryId: enquiry.id, email }, { jobId: `email-${enquiry.id}` }),
-      pushNotificationQueue.add(
-        'notify',
-        { enquiryId: enquiry.id, propertyRef },
-        { jobId: `push-${enquiry.id}` }
-      ),
-    ]);
+    await dispatchEnquiryJobs({
+      enquiryId: enquiry.id,
+      email,
+      propertyRef,
+    });
 
     return this.toPublic(enquiry);
   }

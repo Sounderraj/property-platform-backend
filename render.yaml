@@ -1,6 +1,5 @@
-# Render Blueprint — free subdomain + HTTPS
-# Deploy: Render Dashboard → New → Blueprint → connect this repo
-# Set DATABASE_URL (Neon) and REDIS_URL (Upstash) when prompted.
+# Render — API only (no Redis / Upstash required)
+# Set DATABASE_URL (Neon) when prompted.
 
 services:
   - type: web
@@ -15,9 +14,9 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: USE_REDIS
+        value: "false"
       - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
         sync: false
       - key: CRM_WEBHOOK_SECRET
         sync: false
@@ -27,21 +26,3 @@ services:
         value: "60"
       - key: RATE_LIMIT_ENQUIRY_MAX
         value: "10"
-
-  - type: worker
-    name: property-platform-worker
-    runtime: node
-    plan: free
-    branch: main
-    nodeVersion: "20"
-    buildCommand: npm ci --include=dev && npm run build
-    startCommand: npm run worker:prod
-    envVars:
-      - key: NODE_ENV
-        value: production
-      - key: DATABASE_URL
-        sync: false
-      - key: REDIS_URL
-        sync: false
-      - key: CRM_WEBHOOK_SECRET
-        sync: false

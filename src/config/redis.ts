@@ -1,11 +1,11 @@
 import Redis, { RedisOptions } from 'ioredis';
-import { env } from './env';
+import { env, isRedisEnabled } from './env';
 import { logger } from './logger';
 
-/** Options for ioredis + BullMQ — Upstash needs rediss:// and TLS. */
-export function buildRedisConnectionOptions(): RedisOptions {
-  const parsed = new URL(env.REDIS_URL);
-  const useTls = parsed.protocol === 'rediss:';
+function buildRedisConnectionOptions(): RedisOptions {
+  const url = env.REDIS_URL!;
+  const useTls = url.startsWith('rediss://');
+  const parsed = new URL(url);
 
   return {
     host: parsed.hostname,
@@ -23,19 +23,26 @@ export function buildRedisConnectionOptions(): RedisOptions {
   };
 }
 
-export const redis = new Redis(buildRedisConnectionOptions());
+function createRedisClient(): Redis {
+  const client = new Redis(buildRedisConnectionOptions());
 
-redis.on('error', (err) => {
-  if (err.message.includes('ECONNRESET')) {
-    logger.warn('Redis connection reset — reconnecting');
-    return;
-  }
-  logger.error({ err }, 'Redis connection error');
-});
+  client.on('error', (err) => {
+    if (err.message.includes('ECONNRESET')) {
+      logger.warn('Redis connection reset — reconnecting');
+      return;
+    }
+    logger.error({ err }, 'Redis connection error');
+  });
 
-redis.on('connect', () => logger.info('Redis connected'));
+  client.on('connect', () => logger.info('Redis connected'));
+  return client;
+}
 
-export async function checkRedisHealth(): Promise<boolean> {
+export const redis = isRedisEnabled ? createRedisClient() : (null as unknown as Redis);
+
+export async function checkRedisHealth(): Promise<boolean | 'disabled'> {
+  if (!isRedisEnabled) return 'disabled';
+
   try {
     const pong = await redis.ping();
     return pong === 'PONG';
@@ -45,4 +52,10 @@ export async function checkRedisHealth(): Promise<boolean> {
   }
 }
 
-export const bullmqConnection = buildRedisConnectionOptions();
+export const bullmqConnection = isRedisEnabled ? buildRedisConnectionOptions() : null;
+
+export async function disconnectRedis(): Promise<void> {
+  if (isRedisEnabled && redis) {
+    redis.disconnect();
+  }
+}
