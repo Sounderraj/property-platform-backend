@@ -8,7 +8,16 @@ const envSchema = z.object({
   PORT: z.coerce.number().default(3000),
   HOST: z.string().default('0.0.0.0'),
   DATABASE_URL: z.string().min(1),
-  REDIS_URL: z.string().default('redis://localhost:6379'),
+  REDIS_URL: z
+    .string()
+    .default('redis://localhost:6379')
+    .refine((url) => url.startsWith('redis://') || url.startsWith('rediss://'), {
+      message: 'REDIS_URL must start with redis:// or rediss://',
+    })
+    .refine((url) => !url.includes('redis-cli'), {
+      message:
+        'REDIS_URL must be the Upstash "Redis URL" only — do not paste the redis-cli command',
+    }),
   RATE_LIMIT_MAX: z.coerce.number().default(60),
   RATE_LIMIT_ENQUIRY_MAX: z.coerce.number().default(10),
   CRM_WEBHOOK_SECRET: z.string().min(8),

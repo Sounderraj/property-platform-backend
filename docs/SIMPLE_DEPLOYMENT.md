@@ -29,8 +29,26 @@ https://property-platform-api.onrender.com
 
 1. Sign up at [upstash.com](https://upstash.com)
 2. **Create database** → type: **Regional**, name: `property-redis`
-3. Open the database → copy **Redis URL** (starts with `rediss://...`)
-4. Keep it for Step 4
+3. On the database page, find **Redis URL** (tab: **Details** or **Connect**)
+4. Copy **only** the URL — it looks like:
+
+```
+rediss://default:YOUR_PASSWORD@your-name-12345.upstash.io:6379
+```
+
+**Do NOT copy** the `redis-cli` command. Wrong example (will crash):
+
+```
+redis-cli --tls -u redis://default:...@....upstash.io:6379   ❌
+```
+
+**Correct** — paste only this into Render `REDIS_URL`:
+
+```
+rediss://default:YOUR_PASSWORD@your-name-12345.upstash.io:6379   ✅
+```
+
+> Use `rediss://` (with double **s**) — Upstash requires TLS.
 
 ---
 
