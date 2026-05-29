@@ -1,5 +1,4 @@
-Caddyfile
-!Caddyfile.example
+node_modules/
 dist/
 .env
 .env.local
@@ -9,6 +8,7 @@ logs/
 coverage/
 .idea/
 .vscode/
+data/
 screenshots/*.png
 screenshots/*.jpg
 !screenshots/.gitkeep

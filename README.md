@@ -2,168 +2,72 @@
 
 Production-ready backend for a high-traffic property platform. Built for the Backend Developer Assessment.
 
-**Stack:** Node.js 20, TypeScript, Fastify, PostgreSQL, Prisma, Redis, BullMQ
+**Stack:** Node.js 20, TypeScript, Fastify, PostgreSQL, Prisma, Redis/BullMQ (optional)
+
+**Live URL:** `https://property-platform-api.onrender.com`  
+**GitHub:** https://github.com/Sounderraj/property-platform-backend
 
 ## Features
 
 - REST APIs for enquiries and CRM webhooks
 - Request validation, sanitisation, rate limiting, idempotency
 - Duplicate enquiry detection (fingerprint + time window)
-- Async processing: CRM sync, email, push notifications (BullMQ)
-- WordPress WPGraphQL integration with Redis caching
-- Health checks, structured logging, Docker deployment
+- Async processing: CRM sync, email, push (BullMQ when `USE_REDIS=true`, inline otherwise)
+- WordPress WPGraphQL integration with caching
+- Health checks, structured logging, Docker configuration
 
 ## Quick Start (Local)
 
-### Prerequisites
-
-- Node.js 20+
-- Docker Desktop (for Postgres + Redis)
-
-### 1. Clone and install
-
 ```bash
-cd property-platform-backend
 cp .env.example .env
 npm install
-```
-
-### 2. Start infrastructure
-
-```bash
 docker compose up -d postgres redis
-```
-
-### 3. Run migrations
-
-```bash
 npx prisma migrate deploy
-npm run db:seed
-```
-
-### 4. Start API and worker (two terminals)
-
-```bash
 npm run dev
-npm run worker
 ```
 
-API: http://localhost:3000  
-Health: http://localhost:3000/health
+API: http://localhost:3000/health
 
-### 5. Full Docker stack
-
-```bash
-docker compose up --build
-```
+With Redis locally, also run `npm run worker` in a second terminal and set `USE_REDIS=true` in `.env`.
 
 ## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/health` | Health check (DB + Redis) |
+| GET | `/health` | Health check |
 | POST | `/api/enquiry` | Create enquiry |
 | GET | `/api/enquiry/:id` | Get enquiry by ID |
-| GET | `/api/enquiries` | Paginated list (`page`, `limit`, `status`) |
+| GET | `/api/enquiries` | Paginated list |
 | POST | `/api/webhook/crm` | CRM webhook (HMAC signed) |
-| GET | `/api/properties` | Properties from WordPress (cached) |
+| GET | `/api/properties` | Properties (cached / mock) |
 | GET | `/api/properties/:slug` | Single property |
-| POST | `/api/admin/cache/invalidate` | Invalidate WP cache |
+| POST | `/api/admin/cache/invalidate` | Invalidate cache |
 
-See [docs/API.md](docs/API.md) for full request/response examples.
-
-## Environment Variables
-
-Copy `.env.example` to `.env`. Key variables:
-
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `REDIS_URL` | Redis connection string |
-| `CRM_WEBHOOK_SECRET` | HMAC secret for webhook verification |
-| `WORDPRESS_GRAPHQL_URL` | WPGraphQL endpoint |
-| `RATE_LIMIT_MAX` | Global requests/minute per IP |
-| `CACHE_INVALIDATION_SECRET` | Secret for cache invalidation endpoint |
-
-## Webhook Signature
-
-```bash
-node scripts/generate-webhook-signature.js '{"event":"enquiry.synced","enquiryId":"<uuid>"}'
-```
-
-Send the output as header `X-Webhook-Signature`.
-
-## Project Structure
-
-```
-src/
-  config/       # env, db, redis, logger
-  middleware/   # error handler
-  routes/       # HTTP routes
-  services/     # business logic
-  queues/       # BullMQ queues
-  workers/      # background job processors
-  schemas/      # Zod validation
-prisma/         # schema + migrations
-docker/         # (compose at root)
-nginx/          # reverse proxy config
-postman/        # API collection
-docs/           # API + performance notes
-```
-
-## Database Schema
-
-See `prisma/schema.prisma` and `prisma/migrations/`.
-
-**Tables:** `enquiries`, `idempotency_keys`, `crm_webhook_logs`
-
-**Indexes:** email+created_at, fingerprint, property_ref, pagination on created_at
-
-## Async Workflows
-
-On `POST /api/enquiry`, three BullMQ jobs are queued:
-
-1. **crm-sync** — updates enquiry status PENDING → PROCESSING → SYNCED
-2. **email** — simulated notification email
-3. **push-notification** — simulated push alert
-
-CRM webhooks are processed asynchronously with retry + dead-letter queue.
-
-## Deploy (recommended — DigitalOcean + Docker)
-
-**Ubuntu VPS (assessment-preferred) + one Docker command:**
-
-[docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)
-
-```bash
-docker compose -f docker-compose.deploy.yml up -d --build
-```
-
-Runs Postgres, Redis, API, Worker, and HTTPS on one DigitalOcean Droplet (~$4–6/month).
+See [docs/API.md](docs/API.md) for request/response examples.
 
 ## Documentation
 
-- [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) — **DigitalOcean + Docker** (recommended)
-- [DEPLOYMENT.md](DEPLOYMENT.md) — PM2 + Nginx alternative
-- [docs/SIMPLE_DEPLOYMENT.md](docs/SIMPLE_DEPLOYMENT.md) — Render PaaS alternative
-- [SECURITY_REPORT.md](SECURITY_REPORT.md) — vulnerabilities + threat scenarios
+- [DEPLOYMENT.md](DEPLOYMENT.md) — Render, Docker, VPS
+- [SECURITY_REPORT.md](SECURITY_REPORT.md) — security review + threat scenarios
 - [docs/API.md](docs/API.md) — API reference
-- [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — performance issues & fixes
+- [docs/PERFORMANCE.md](docs/PERFORMANCE.md) — performance fixes
 
 ## Postman
 
 Import `postman/Property-Platform-API.postman_collection.json`.
 
+## Database Schema
+
+See `prisma/schema.prisma` — tables: `enquiries`, `idempotency_keys`, `crm_webhook_logs`
+
 ## Submission Checklist
 
-- [ ] Deploy live (see [DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md))
-- [x] Push to GitHub
-- [ ] Add screenshots to `screenshots/`
-- [ ] Fill live URL below
-
-**Live URL:** `https://your-domain.com` (update after deployment)
-
-**GitHub:** `https://github.com/Sounderraj/property-platform-backend`
+- [x] GitHub repository
+- [x] Live HTTPS URL (Render)
+- [x] README, DEPLOYMENT, SECURITY_REPORT, API docs
+- [x] Docker configuration
+- [x] Postman collection
+- [ ] Screenshots in `screenshots/`
 
 ## Author
 
