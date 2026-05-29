@@ -44,7 +44,7 @@ sudo npm install -g pm2
 
 ```bash
 cd /home/deploy
-git clone https://github.com/YOUR_USERNAME/property-platform-backend.git
+git clone https://github.com/Sounderraj/property-platform-backend.git
 cd property-platform-backend
 ```
 

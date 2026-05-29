@@ -150,7 +150,7 @@ Import `postman/Property-Platform-API.postman_collection.json`.
 
 **Live URL:** `https://your-domain.com` (update after deployment)
 
-**GitHub:** `https://github.com/your-username/property-platform-backend`
+**GitHub:** `https://github.com/Sounderraj/property-platform-backend`
 
 ## Author
 

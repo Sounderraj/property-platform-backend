@@ -153,11 +153,9 @@ sudo apt install -y nginx certbot python3-certbot-nginx git
 
 ```bash
 cd /home/deploy
-git clone https://github.com/YOUR_USERNAME/property-platform-backend.git
+git clone https://github.com/Sounderraj/property-platform-backend.git
 cd property-platform-backend
 ```
-
-Replace `YOUR_USERNAME` with your GitHub username.
 
 ### 4.2 Start PostgreSQL + Redis (Docker)
 
@@ -362,7 +360,7 @@ Edit `README.md`:
 
 ```markdown
 **Live URL:** https://sounderrajan-property.duckdns.org
-**GitHub:** https://github.com/YOUR_USERNAME/property-platform-backend
+**GitHub:** https://github.com/Sounderraj/property-platform-backend
 ```
 
 Check off the submission checklist items.
