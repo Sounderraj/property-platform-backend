@@ -4,7 +4,6 @@ import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import { env, isProduction } from './config/env';
 import { logger } from './config/logger';
-import { redis } from './config/redis';
 import { errorHandler } from './middleware/error-handler';
 import { enquiryRoutes } from './routes/enquiry.routes';
 import { webhookRoutes } from './routes/webhook.routes';
@@ -46,7 +45,7 @@ export async function buildApp() {
     global: true,
     max: env.RATE_LIMIT_MAX,
     timeWindow: '1 minute',
-    redis,
+    // In-memory store (single Render instance). Avoids extra Upstash connections.
   });
 
   app.setErrorHandler(errorHandler);

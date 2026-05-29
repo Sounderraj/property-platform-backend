@@ -2,7 +2,7 @@ import Redis, { RedisOptions } from 'ioredis';
 import { env } from './env';
 import { logger } from './logger';
 
-/** Shared Redis options for ioredis + BullMQ (Upstash requires TLS via rediss://). */
+/** Options for ioredis + BullMQ — Upstash needs rediss:// and TLS. */
 export function buildRedisConnectionOptions(): RedisOptions {
   const parsed = new URL(env.REDIS_URL);
   const useTls = parsed.protocol === 'rediss:';
@@ -15,17 +15,24 @@ export function buildRedisConnectionOptions(): RedisOptions {
     maxRetriesPerRequest: null,
     enableReadyCheck: false,
     connectTimeout: 10_000,
-    retryStrategy: (times) => {
-      if (times > 15) return null;
-      return Math.min(times * 200, 3000);
-    },
+    keepAlive: 30_000,
+    retryStrategy: (times) => Math.min(times * 100, 3000),
+    reconnectOnError: (err) =>
+      err.message.includes('ECONNRESET') || err.message.includes('ETIMEDOUT'),
     ...(useTls ? { tls: {} } : {}),
   };
 }
 
 export const redis = new Redis(buildRedisConnectionOptions());
 
-redis.on('error', (err) => logger.error({ err }, 'Redis connection error'));
+redis.on('error', (err) => {
+  if (err.message.includes('ECONNRESET')) {
+    logger.warn('Redis connection reset — reconnecting');
+    return;
+  }
+  logger.error({ err }, 'Redis connection error');
+});
+
 redis.on('connect', () => logger.info('Redis connected'));
 
 export async function checkRedisHealth(): Promise<boolean> {
@@ -38,5 +45,4 @@ export async function checkRedisHealth(): Promise<boolean> {
   }
 }
 
-// BullMQ uses the same connection settings (including TLS for Upstash)
 export const bullmqConnection = buildRedisConnectionOptions();
