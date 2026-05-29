@@ -152,7 +152,7 @@ Save to `screenshots/` folder and push to GitHub.
 | Problem | Fix |
 |---------|-----|
 | Build fails on `prisma migrate` | Check `DATABASE_URL` is correct and Neon project is active |
-| Redis connection error | Use Upstash **Redis URL** (`rediss://`), not REST URL |
+| Redis connection error / ECONNRESET | Use `rediss://` URL (TLS). Do not use `redis://` or REST URL |
 | 502 / service unavailable | Wait for deploy to finish; check Render logs |
 | Worker not processing jobs | Ensure **Worker** service is Live (not just API) |
 | Slow first request | Free tier cold start — wait and retry |
