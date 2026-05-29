@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
+    "build:render": "npm ci --include=dev && npm run build && npx prisma migrate deploy",
     "start": "node dist/index.js",
     "worker": "tsx src/workers/index.ts",
     "worker:prod": "node dist/workers/index.js",

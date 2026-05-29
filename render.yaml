@@ -8,7 +8,7 @@ services:
     runtime: node
     plan: free
     branch: main
-    buildCommand: npm ci && npm run build && npx prisma migrate deploy
+    buildCommand: npm ci --include=dev && npm run build && npx prisma migrate deploy
     startCommand: npm start
     healthCheckPath: /health
     envVars:
@@ -34,7 +34,7 @@ services:
     runtime: node
     plan: free
     branch: main
-    buildCommand: npm ci && npm run build
+    buildCommand: npm ci --include=dev && npm run build
     startCommand: npm run worker:prod
     envVars:
       - key: NODE_ENV
